@@ -52,9 +52,9 @@ export async function GET() {
           isNotNull(occupancySessions.endedAt),
         ),
       )
-      .groupBy(
-        sql`extract(hour from ${occupancySessions.startedAt} at time zone ${household.timezone})`,
-      ),
+      // Group by ordinal: repeating the expression would bind the timezone
+      // param twice and Postgres would treat them as different expressions
+      .groupBy(sql`1`),
   ]);
 
   return NextResponse.json({ perMember, byHour });

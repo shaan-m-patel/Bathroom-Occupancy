@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { getDb, households, members } from "@/db";
 import { createSessionCookie } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   const inviteCode = body?.inviteCode?.trim().toUpperCase();
+  const claimMemberId = body?.claimMemberId;
   const name = body?.name?.trim();
-  if (!inviteCode || !name) {
+  if (!inviteCode || (!name && !claimMemberId)) {
     return NextResponse.json(
       { error: "Invite code and your name are required" },
       { status: 400 },
@@ -22,6 +23,27 @@ export async function POST(req: NextRequest) {
 
   if (!household) {
     return NextResponse.json({ error: "Invalid invite code" }, { status: 404 });
+  }
+
+  // Rejoin as an existing member (new device / logged out)
+  if (claimMemberId) {
+    const [existing] = await db
+      .select()
+      .from(members)
+      .where(
+        and(
+          eq(members.id, claimMemberId),
+          eq(members.householdId, household.id),
+        ),
+      );
+    if (!existing) {
+      return NextResponse.json({ error: "Member not found" }, { status: 404 });
+    }
+    await createSessionCookie({
+      memberId: existing.id,
+      householdId: household.id,
+    });
+    return NextResponse.json({ household, member: existing });
   }
 
   const [member] = await db
