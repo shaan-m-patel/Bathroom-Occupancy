@@ -17,6 +17,7 @@ const TYPE_ICONS: Record<string, string> = {
   challenge_received: "🟠",
   challenge_accepted: "✅",
   challenge_declined: "❌",
+  waitlist_available: "🔔",
 };
 
 const COLLAPSED_COUNT = 5;

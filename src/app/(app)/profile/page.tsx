@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getDb, households, members } from "@/db";
 import { getSession } from "@/lib/auth";
 import { HouseholdCard } from "@/components/profile/household-card";
+import { NotificationSettings } from "@/components/profile/notification-settings";
 import { ProfileEditor } from "@/components/profile/profile-editor";
 import { PushToggle } from "@/components/profile/push-toggle";
 
@@ -36,6 +37,11 @@ export default async function ProfilePage() {
         initialColor={me.member.color}
       />
       <PushToggle />
+      <NotificationSettings
+        initialPrefs={me.member.notificationPrefs}
+        initialQuietStart={me.member.quietHoursStart}
+        initialQuietEnd={me.member.quietHoursEnd}
+      />
       <HouseholdCard
         name={me.household.name}
         inviteCode={me.household.inviteCode}

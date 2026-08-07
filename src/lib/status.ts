@@ -5,8 +5,9 @@ import {
   notifications,
   occupancySessions,
   reservations,
+  waitlistEntries,
 } from "@/db";
-import { notifyHousehold, notifyMembers } from "@/lib/notify";
+import { notifyBathroomAvailable, notifyMembers } from "@/lib/notify";
 
 /**
  * Lazy expiry: any active session whose estimate has passed is closed at its
@@ -35,11 +36,11 @@ export async function expireStaleSessions(householdId: string) {
       title: "Bathroom session ended",
       body: "Your estimated bathroom session has ended. If you're still inside, check in again.",
     });
-    await notifyHousehold(householdId, session.memberId, {
-      type: "bathroom_available",
-      title: "Bathroom available",
-      body: "The bathroom is now available.",
-    });
+    await notifyBathroomAvailable(
+      householdId,
+      session.memberId,
+      "The bathroom is now available.",
+    );
   }
 }
 
@@ -89,7 +90,7 @@ export async function getStatusPayload(
   await expireStaleSessions(householdId);
   await dispatchReservationReminders(householdId);
 
-  const [currentRows, householdMembers, unreadRows] = await Promise.all([
+  const [currentRows, householdMembers, unreadRows, waiting] = await Promise.all([
     db
       .select({
         session: occupancySessions,
@@ -112,6 +113,10 @@ export async function getStatusPayload(
       .where(
         and(eq(notifications.memberId, memberId), isNull(notifications.readAt)),
       ),
+    db
+      .select({ memberId: waitlistEntries.memberId })
+      .from(waitlistEntries)
+      .where(eq(waitlistEntries.householdId, householdId)),
   ]);
 
   let windowReservations: Array<{
@@ -140,5 +145,7 @@ export async function getStatusPayload(
     members: householdMembers,
     reservations: windowReservations,
     unreadCount: unreadRows[0]?.count ?? 0,
+    waitingCount: waiting.length,
+    amWaiting: waiting.some((w) => w.memberId === memberId),
   };
 }

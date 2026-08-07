@@ -8,6 +8,13 @@
       "when": 1786124721837,
       "tag": "0000_overjoyed_logan",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1786145590933,
+      "tag": "0001_colossal_archangel",
+      "breakpoints": true
     }
   ]
 }

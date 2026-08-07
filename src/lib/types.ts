@@ -80,4 +80,6 @@ export type StatusPayload = {
   members: MemberDto[];
   reservations: { reservation: ReservationDto; member: MemberDto }[];
   unreadCount: number;
+  waitingCount: number;
+  amWaiting: boolean;
 };

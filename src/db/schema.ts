@@ -1,6 +1,7 @@
 import {
   boolean,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   text,
@@ -34,6 +35,14 @@ export const members = pgTable("members", {
   emoji: text("emoji").notNull().default("🙂"),
   color: text("color").notNull().default("#3b82f6"),
   isAdmin: boolean("is_admin").notNull().default(false),
+  // Push preferences keyed by category; a missing key means enabled
+  notificationPrefs: jsonb("notification_prefs")
+    .$type<Record<string, boolean>>()
+    .notNull()
+    .default({}),
+  // Minutes since midnight in the household timezone; both null = disabled
+  quietHoursStart: integer("quiet_hours_start"),
+  quietHoursEnd: integer("quiet_hours_end"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -103,6 +112,21 @@ export const pushSubscriptions = pgTable("push_subscriptions", {
   endpoint: text("endpoint").notNull().unique(),
   p256dh: text("p256dh").notNull(),
   auth: text("auth").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// "Notify me when free": rows are pinged and cleared when the bathroom opens up
+export const waitlistEntries = pgTable("waitlist_entries", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  householdId: uuid("household_id")
+    .notNull()
+    .references(() => households.id, { onDelete: "cascade" }),
+  memberId: uuid("member_id")
+    .notNull()
+    .unique()
+    .references(() => members.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { and, eq, isNull } from "drizzle-orm";
-import { getDb, members, occupancySessions } from "@/db";
+import { getDb, members, occupancySessions, waitlistEntries } from "@/db";
 import { requireSession } from "@/lib/api-auth";
 import { notifyHousehold } from "@/lib/notify";
 import { expireStaleSessions } from "@/lib/status";
@@ -41,6 +41,11 @@ export async function POST(req: NextRequest) {
       { status: 409 },
     );
   }
+
+  // They got in — no need to ping them when the bathroom frees up
+  await db
+    .delete(waitlistEntries)
+    .where(eq(waitlistEntries.memberId, session.memberId));
 
   const expectedEndAt = new Date(Date.now() + durationMinutes * 60 * 1000);
   const [created] = await db

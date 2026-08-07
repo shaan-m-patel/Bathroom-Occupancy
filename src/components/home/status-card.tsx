@@ -10,6 +10,7 @@ import { VineSprig } from "@/components/decor";
 import { useStatusContext } from "@/components/status-provider";
 import { postJson } from "@/lib/client";
 import { formatTime } from "@/lib/time";
+import { cn } from "@/lib/utils";
 
 export function StatusCard() {
   const { data, refresh } = useStatusContext();
@@ -94,8 +95,35 @@ export function StatusCard() {
         </div>
       </div>
 
+      {!isMine && (
+        <div className="mt-5">
+          <Button
+            variant="outline"
+            className={cn(
+              "h-12 w-full rounded-2xl bg-background/60",
+              data.amWaiting && "border-gold/50 bg-gold/10 hover:bg-gold/15",
+            )}
+            disabled={busy}
+            onClick={() =>
+              act(() => postJson("/api/waitlist", { waiting: !data.amWaiting }))
+            }
+          >
+            {data.amWaiting
+              ? "🔔 You'll be pinged when it's free — tap to cancel"
+              : "🔔 Notify me when it's free"}
+          </Button>
+        </div>
+      )}
+
       {isMine && (
         <div className="mt-5 space-y-3">
+          {data.waitingCount > 0 && (
+            <p className="text-center text-xs font-medium text-terracotta">
+              👀 {data.waitingCount === 1
+                ? "Someone is waiting"
+                : `${data.waitingCount} people are waiting`}
+            </p>
+          )}
           <Button
             size="lg"
             className="h-14 w-full rounded-2xl bg-moss text-lg font-semibold text-moss-foreground shadow-md shadow-moss/20 transition-transform hover:bg-moss/90 active:scale-[0.99]"

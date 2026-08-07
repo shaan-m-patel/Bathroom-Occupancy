@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { and, eq, isNull } from "drizzle-orm";
 import { getDb, members, occupancySessions } from "@/db";
 import { requireSession } from "@/lib/api-auth";
-import { notifyHousehold } from "@/lib/notify";
+import { notifyBathroomAvailable } from "@/lib/notify";
 
 export async function POST() {
   const { session, error } = await requireSession();
@@ -33,11 +33,11 @@ export async function POST() {
     .from(members)
     .where(eq(members.id, session.memberId));
 
-  await notifyHousehold(session.householdId, session.memberId, {
-    type: "bathroom_available",
-    title: "Bathroom available",
-    body: `${me.name} finished — the bathroom is now available.`,
-  });
+  await notifyBathroomAvailable(
+    session.householdId,
+    session.memberId,
+    `${me.name} finished — the bathroom is now available.`,
+  );
 
   return NextResponse.json({ session: ended });
 }
