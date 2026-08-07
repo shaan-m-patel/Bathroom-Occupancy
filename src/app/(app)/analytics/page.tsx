@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { bucketIndex, buildBuckets } from "@/components/analytics/buckets";
 import {
   formatHour,
   formatMinutes,
@@ -19,30 +20,34 @@ import { cn } from "@/lib/utils";
 
 type Scope = "me" | "house";
 
-function dayKeysBack(count: number) {
-  return Array.from({ length: count }, (_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - (count - 1 - i));
-    const pad = (n: number) => String(n).padStart(2, "0");
-    return {
-      key: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
-      label: d.toLocaleDateString([], { month: "short", day: "numeric" }),
-    };
-  });
-}
+const RANGES = [
+  { key: "14", label: "2 weeks", days: 14, title: "Last 2 weeks" },
+  { key: "90", label: "3 months", days: 90, title: "Last 3 months" },
+  { key: "all", label: "All time", days: null, title: "All time" },
+] as const;
+type RangeKey = (typeof RANGES)[number]["key"];
 
 export default function AnalyticsPage() {
   const [data, setData] = useState<AnalyticsPayload | null>(null);
   const [scope, setScope] = useState<Scope>("house");
+  const [rangeKey, setRangeKey] = useState<RangeKey>("14");
   const { data: status } = useStatusContext();
   const meId = status?.meId ?? "";
+  const range = RANGES.find((r) => r.key === rangeKey)!;
+
+  // Reset to the loading state during render when the range changes
+  const [prevRange, setPrevRange] = useState<RangeKey>(rangeKey);
+  if (prevRange !== rangeKey) {
+    setPrevRange(rangeKey);
+    setData(null);
+  }
 
   useEffect(() => {
-    fetch("/api/analytics", { cache: "no-store" })
+    fetch(`/api/analytics?days=${rangeKey}`, { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
       .then(setData)
       .catch(() => null);
-  }, []);
+  }, [rangeKey]);
 
   const inScope = (memberId: string) => scope === "house" || memberId === meId;
 
@@ -61,7 +66,7 @@ export default function AnalyticsPage() {
         <VineSprig className="h-8 w-16 opacity-80" />
         <p className="font-display text-xl">No history yet</p>
         <p className="text-sm text-muted-foreground">
-          Charts appear once people start checking in.
+          No sessions in this period — charts appear once people check in.
         </p>
       </div>
     );
@@ -86,28 +91,38 @@ export default function AnalyticsPage() {
       if (inScope(row.memberId)) weekdays[row.weekday] += row.sessions;
     }
 
-    const days = dayKeysBack(14);
-    const trend = days.map(({ key, label }) => {
-      const rows = data.byDay.filter((r) => r.day === key && inScope(r.memberId));
-      return {
-        label,
-        minutes: rows.reduce((sum, r) => sum + r.minutes, 0),
-        sessions: rows.reduce((sum, r) => sum + r.sessions, 0),
-      };
-    });
+    const earliestDay = data.byDay.reduce<string | null>(
+      (min, r) => (min === null || r.day < min ? r.day : min),
+      null,
+    );
+    const { buckets, stepDays } = buildBuckets(range.days, earliestDay);
+    const perBucket = stepDays === 1 ? "day" : "week";
+
+    const trend = buckets.map((b) => ({ label: b.label, minutes: 0, sessions: 0 }));
+    for (const row of data.byDay) {
+      if (!inScope(row.memberId)) continue;
+      const i = bucketIndex(row.day, buckets, stepDays);
+      if (i < 0) continue;
+      trend[i].minutes += row.minutes;
+      trend[i].sessions += row.sessions;
+    }
 
     // One line per member (always household-wide — it's a comparison chart)
-    const memberSeries = data.perMember.map((m) => ({
-      memberId: m.memberId,
-      label: m.memberId === meId ? "You" : m.name,
-      emoji: m.emoji,
-      color: m.color,
-      values: days.map(({ key }) =>
-        data.byDay
-          .filter((r) => r.day === key && r.memberId === m.memberId)
-          .reduce((sum, r) => sum + r.minutes, 0),
-      ),
-    }));
+    const memberSeries = data.perMember.map((m) => {
+      const values = buckets.map(() => 0);
+      for (const row of data.byDay) {
+        if (row.memberId !== m.memberId) continue;
+        const i = bucketIndex(row.day, buckets, stepDays);
+        if (i >= 0) values[i] += row.minutes;
+      }
+      return {
+        memberId: m.memberId,
+        label: m.memberId === meId ? "You" : m.name,
+        emoji: m.emoji,
+        color: m.color,
+        values,
+      };
+    });
 
     content = (
       <>
@@ -126,9 +141,9 @@ export default function AnalyticsPage() {
 
         <Card className="animate-fade-up gap-3 rounded-3xl p-5 [animation-delay:60ms]">
           <div>
-            <h2 className="text-sm font-semibold">Last 14 days</h2>
+            <h2 className="text-sm font-semibold">{range.title}</h2>
             <p className="text-xs text-muted-foreground">
-              Minutes in the bathroom per day
+              Minutes in the bathroom per {perBucket}
             </p>
           </div>
           <TrendChart days={trend} />
@@ -138,12 +153,12 @@ export default function AnalyticsPage() {
           <div>
             <h2 className="text-sm font-semibold">Who&apos;s using it most</h2>
             <p className="text-xs text-muted-foreground">
-              Daily minutes per member, last 14 days
+              Minutes per member per {perBucket}, {range.title.toLowerCase()}
             </p>
           </div>
           <MemberLineChart
             series={memberSeries}
-            dayLabels={days.map((d) => d.label)}
+            dayLabels={buckets.map((b) => b.label)}
           />
         </Card>
 
@@ -207,6 +222,24 @@ export default function AnalyticsPage() {
           ))}
         </div>
       </header>
+
+      <div className="animate-fade-up flex gap-2 px-1">
+        {RANGES.map((r) => (
+          <button
+            key={r.key}
+            type="button"
+            onClick={() => setRangeKey(r.key)}
+            className={cn(
+              "rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors",
+              rangeKey === r.key
+                ? "border-gold/60 bg-gold/15 text-gold-foreground dark:text-gold"
+                : "text-muted-foreground hover:bg-muted",
+            )}
+          >
+            {r.label}
+          </button>
+        ))}
+      </div>
 
       {content}
     </main>

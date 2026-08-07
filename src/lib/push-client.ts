@@ -10,6 +10,25 @@ export function pushSupported() {
   );
 }
 
+export function isIos() {
+  if (typeof navigator === "undefined") return false;
+  // iPadOS reports as "Macintosh" but is the only Mac with touch support
+  return (
+    /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+    (navigator.userAgent.includes("Macintosh") && navigator.maxTouchPoints > 1)
+  );
+}
+
+/** True when the app was launched from the home screen icon. */
+export function isInstalled() {
+  if (typeof window === "undefined") return false;
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    ("standalone" in navigator &&
+      (navigator as { standalone?: boolean }).standalone === true)
+  );
+}
+
 export async function getPushSubscription() {
   if (!pushSupported()) return null;
   const registration = await navigator.serviceWorker.register("/sw.js");

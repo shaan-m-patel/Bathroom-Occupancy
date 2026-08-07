@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { and, eq, gte, isNotNull, sql } from "drizzle-orm";
 import { getDb, households, members, occupancySessions } from "@/db";
 import { requireSession } from "@/lib/api-auth";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const { session, error } = await requireSession();
   if (error) return error;
 
@@ -13,12 +13,19 @@ export async function GET() {
     .from(households)
     .where(eq(households.id, session.householdId));
 
+  // ?days=N limits everything to the last N days; omitted or "all" = all time
+  const daysParam = Number(req.nextUrl.searchParams.get("days"));
+  const rangeStart =
+    Number.isFinite(daysParam) && daysParam > 0
+      ? new Date(Date.now() - daysParam * 24 * 60 * 60 * 1000)
+      : null;
+
   const completed = and(
     eq(occupancySessions.householdId, session.householdId),
     isNotNull(occupancySessions.endedAt),
+    ...(rangeStart ? [gte(occupancySessions.startedAt, rangeStart)] : []),
   );
   const durationMinutes = sql<number>`avg(extract(epoch from (${occupancySessions.endedAt} - ${occupancySessions.startedAt})) / 60)`;
-  const trendStart = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
 
   // Hour/weekday/day breakdowns are grouped per member so the client can
   // aggregate either a single member ("You") or the whole household.
@@ -70,7 +77,7 @@ export async function GET() {
         minutes: sql<number>`round((sum(extract(epoch from (${occupancySessions.endedAt} - ${occupancySessions.startedAt}))) / 60)::numeric)::int`,
       })
       .from(occupancySessions)
-      .where(and(completed, gte(occupancySessions.startedAt, trendStart)))
+      .where(completed)
       .groupBy(sql`1, 2`),
   ]);
 

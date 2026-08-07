@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Info } from "lucide-react";
+import { Info, Share, MoreVertical } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import {
   disablePush,
   enablePush,
   getPushSubscription,
+  isInstalled,
+  isIos,
   pushSupported,
 } from "@/lib/push-client";
 
@@ -15,15 +17,24 @@ export function PushToggle() {
   const [supported, setSupported] = useState(true);
   const [enabled, setEnabled] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [showInfo, setShowInfo] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
+  const [ios, setIos] = useState(false);
 
   useEffect(() => {
     getPushSubscription()
       .then((sub) => {
-        setSupported(pushSupported());
+        setIos(isIos());
+        const ok = pushSupported();
+        setSupported(ok);
         setEnabled(!!sub);
+        // The user needs the install guide right now — don't hide it
+        if (!ok && !isInstalled()) setShowGuide(true);
       })
-      .catch(() => setSupported(false));
+      .catch(() => {
+        setIos(isIos());
+        setSupported(false);
+        if (!isInstalled()) setShowGuide(true);
+      });
   }, []);
 
   async function toggle(next: boolean) {
@@ -50,9 +61,9 @@ export function PushToggle() {
             <p className="text-sm font-semibold">Push notifications</p>
             <button
               type="button"
-              onClick={() => setShowInfo((v) => !v)}
+              onClick={() => setShowGuide((v) => !v)}
               aria-label="How to add the app to your home screen"
-              aria-expanded={showInfo}
+              aria-expanded={showGuide}
               className="text-muted-foreground transition-colors hover:text-foreground"
             >
               <Info className="size-3.5" />
@@ -61,7 +72,7 @@ export function PushToggle() {
           <p className="text-xs text-muted-foreground">
             {supported
               ? "Check-ins, challenges, and reminders on this device"
-              : "Not supported in this browser — on iPhone, add the app to your Home Screen first"}
+              : "Add the app to your home screen first — steps below"}
           </p>
         </div>
         <Switch
@@ -71,18 +82,51 @@ export function PushToggle() {
         />
       </div>
 
-      {showInfo && (
-        <div className="animate-fade-up rounded-2xl bg-muted/50 p-3 text-xs text-muted-foreground">
-          <p className="mb-1 font-medium text-foreground">
-            Add this app to your home screen
-          </p>
-          <p>
-            Press the three dots in your mobile browser&apos;s navigation bar,
-            then swipe up or press the share button, press &ldquo;View
-            more&rdquo;, then &ldquo;Add to Home Screen&rdquo;.
-          </p>
-        </div>
-      )}
+      {showGuide && <InstallGuide ios={ios} />}
     </Card>
+  );
+}
+
+function InstallGuide({ ios }: { ios: boolean }) {
+  return (
+    <div className="animate-fade-up rounded-2xl bg-muted/50 p-3 text-xs text-muted-foreground">
+      <p className="mb-2 font-medium text-foreground">
+        Add this app to your home screen
+      </p>
+      {ios ? (
+        <ol className="list-decimal space-y-1.5 pl-4">
+          <li>Open this page in Safari (other browsers won&apos;t work)</li>
+          <li>
+            Tap the Share button{" "}
+            <Share className="inline size-3.5 align-[-2px]" aria-hidden /> at
+            the bottom of the screen
+          </li>
+          <li>
+            Scroll down and tap <strong>Add to Home Screen</strong>, then{" "}
+            <strong>Add</strong>
+          </li>
+          <li>
+            Open <strong>Bathroom</strong> from your home screen and turn this
+            toggle on
+          </li>
+        </ol>
+      ) : (
+        <ol className="list-decimal space-y-1.5 pl-4">
+          <li>
+            Tap the three-dot menu{" "}
+            <MoreVertical className="inline size-3.5 align-[-2px]" aria-hidden />{" "}
+            in your browser
+          </li>
+          <li>
+            Tap <strong>Add to Home screen</strong> (or{" "}
+            <strong>Install app</strong>)
+          </li>
+          <li>
+            Open <strong>Bathroom</strong> from your home screen and turn this
+            toggle on
+          </li>
+        </ol>
+      )}
+    </div>
   );
 }
