@@ -25,8 +25,10 @@ export default async function ProfilePage() {
 
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 pt-6">
-      <header className="px-1">
-        <h1 className="text-xl font-semibold tracking-tight">Profile</h1>
+      <header className="animate-fade-up px-1">
+        <h1 className="font-display text-3xl font-semibold tracking-tight">
+          Profile
+        </h1>
       </header>
 
       <ProfileEditor

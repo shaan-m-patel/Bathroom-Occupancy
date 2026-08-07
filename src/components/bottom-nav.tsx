@@ -17,7 +17,7 @@ export function BottomNav({ unreadCount = 0 }: { unreadCount?: number }) {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-gold/25 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
       <div className="mx-auto grid max-w-md grid-cols-5 pb-[env(safe-area-inset-bottom)]">
         {items.map(({ href, label, icon: Icon }) => {
           const active =
@@ -28,13 +28,16 @@ export function BottomNav({ unreadCount = 0 }: { unreadCount?: number }) {
               href={href}
               className={cn(
                 "relative flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors",
-                active ? "text-foreground" : "text-muted-foreground",
+                active ? "text-moss" : "text-muted-foreground hover:text-foreground",
               )}
             >
+              {active && (
+                <span className="absolute top-0 h-0.5 w-8 rounded-full bg-gold" />
+              )}
               <span className="relative">
                 <Icon className="size-5" strokeWidth={active ? 2.4 : 2} />
                 {href === "/notifications" && unreadCount > 0 && (
-                  <span className="absolute -right-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white">
+                  <span className="absolute -right-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-terracotta px-1 text-[10px] font-semibold text-terracotta-foreground">
                     {unreadCount > 9 ? "9+" : unreadCount}
                   </span>
                 )}

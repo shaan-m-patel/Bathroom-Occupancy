@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Live bathroom occupancy and reservations for your household",
     start_url: "/",
     display: "standalone",
-    background_color: "#ffffff",
-    theme_color: "#10b981",
+    background_color: "#f2ecdc",
+    theme_color: "#f2ecdc",
     icons: [
       {
         src: "/icon.svg",

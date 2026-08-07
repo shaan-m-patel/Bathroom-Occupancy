@@ -26,9 +26,9 @@ export function DayStrip({
             type="button"
             onClick={() => onSelect(day)}
             className={cn(
-              "flex min-w-14 flex-col items-center rounded-2xl border px-3 py-2 transition-colors",
+              "flex min-w-14 flex-col items-center rounded-2xl border px-3 py-2 transition-all",
               isSelected
-                ? "border-foreground bg-foreground text-background"
+                ? "border-moss bg-moss text-moss-foreground shadow-md shadow-moss/20"
                 : "text-muted-foreground hover:bg-muted",
             )}
           >

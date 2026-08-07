@@ -53,8 +53,10 @@ export function ReservationCard({
 
   return (
     <Card
-      className="gap-3 rounded-3xl border-l-4 p-4"
-      style={{ borderLeftColor: pending ? "#f97316" : member.color }}
+      className="animate-fade-up gap-3 rounded-3xl border-l-4 p-4 shadow-sm"
+      style={{
+        borderLeftColor: pending ? "var(--gold)" : member.color,
+      }}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-3">
@@ -86,7 +88,7 @@ export function ReservationCard({
             </Badge>
           )}
           {pending && (
-            <Badge className="rounded-full bg-orange-500 text-white">
+            <Badge className="rounded-full bg-gold text-gold-foreground">
               Challenged
             </Badge>
           )}
@@ -110,7 +112,7 @@ export function ReservationCard({
                 <>
                   <Button
                     size="sm"
-                    className="flex-1 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700"
+                    className="flex-1 rounded-xl bg-moss text-moss-foreground hover:bg-moss/90"
                     disabled={busy}
                     onClick={() =>
                       run(() =>

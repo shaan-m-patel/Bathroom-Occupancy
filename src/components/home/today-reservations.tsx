@@ -15,7 +15,7 @@ export function TodayReservations() {
         <h2 className="text-sm font-semibold">Today&apos;s reservations</h2>
         <Link
           href="/schedule"
-          className="text-xs font-medium text-muted-foreground hover:text-foreground"
+          className="text-xs font-medium text-gold-foreground underline-offset-4 hover:underline dark:text-gold"
         >
           View schedule
         </Link>

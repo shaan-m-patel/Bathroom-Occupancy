@@ -50,7 +50,7 @@ export function CheckInSheet({ onCheckedIn }: { onCheckedIn: () => void }) {
         render={
           <Button
             size="lg"
-            className="h-14 w-full rounded-2xl bg-emerald-600 text-lg font-semibold text-white hover:bg-emerald-700"
+            className="h-14 w-full rounded-2xl bg-moss text-lg font-semibold text-moss-foreground shadow-md shadow-moss/20 transition-transform hover:bg-moss/90 active:scale-[0.99]"
           />
         }
       >
@@ -77,7 +77,7 @@ export function CheckInSheet({ onCheckedIn }: { onCheckedIn: () => void }) {
                 className={cn(
                   "rounded-xl border py-2.5 text-sm font-medium transition-colors",
                   duration === d
-                    ? "border-emerald-600 bg-emerald-600 text-white"
+                    ? "border-moss bg-moss text-moss-foreground"
                     : "hover:bg-muted",
                 )}
               >
@@ -97,7 +97,7 @@ export function CheckInSheet({ onCheckedIn }: { onCheckedIn: () => void }) {
               }}
               className={cn(
                 "h-auto rounded-xl text-center text-sm",
-                duration === null && customDuration && "border-emerald-600",
+                duration === null && customDuration && "border-moss",
               )}
             />
           </div>
@@ -124,7 +124,7 @@ export function CheckInSheet({ onCheckedIn }: { onCheckedIn: () => void }) {
 
           <Button
             size="lg"
-            className="h-13 w-full rounded-2xl bg-emerald-600 text-base font-semibold text-white hover:bg-emerald-700"
+            className="h-13 w-full rounded-2xl bg-moss text-base font-semibold text-moss-foreground hover:bg-moss/90"
             disabled={
               busy ||
               !Number.isFinite(effectiveDuration) ||

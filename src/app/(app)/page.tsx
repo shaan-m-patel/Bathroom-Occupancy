@@ -4,6 +4,8 @@ import { getDb, households, members } from "@/db";
 import { getSession } from "@/lib/auth";
 import { StatusCard } from "@/components/home/status-card";
 import { TodayReservations } from "@/components/home/today-reservations";
+import { GreekKeyDivider } from "@/components/decor";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default async function HomePage() {
   const session = (await getSession())!;
@@ -20,19 +22,27 @@ export default async function HomePage() {
 
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 pt-6">
-      <header className="flex items-center justify-between px-1">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight">
-            {me.household.name}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Hi {me.member.name} {me.member.emoji}
-          </p>
+      <header className="animate-fade-up space-y-2 px-1">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-display text-3xl font-semibold tracking-tight">
+              {me.household.name}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Hi {me.member.name} {me.member.emoji}
+            </p>
+          </div>
+          <ThemeToggle />
         </div>
+        <GreekKeyDivider />
       </header>
 
-      <StatusCard />
-      <TodayReservations />
+      <div className="animate-fade-up [animation-delay:80ms]">
+        <StatusCard />
+      </div>
+      <div className="animate-fade-up [animation-delay:160ms]">
+        <TodayReservations />
+      </div>
     </main>
   );
 }

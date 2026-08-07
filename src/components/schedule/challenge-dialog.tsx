@@ -65,7 +65,7 @@ export function ChallengeDialog({
           <Button
             size="sm"
             variant="outline"
-            className="rounded-xl border-orange-300 text-orange-600 hover:bg-orange-50 dark:border-orange-900 dark:hover:bg-orange-950"
+            className="rounded-xl border-gold/50 text-gold-foreground hover:bg-gold/10 dark:text-gold"
           />
         }
       >
@@ -90,7 +90,7 @@ export function ChallengeDialog({
                 className={cn(
                   "rounded-full border px-3 py-1.5 text-sm transition-colors",
                   reason === r
-                    ? "border-orange-500 bg-orange-500 text-white"
+                    ? "border-gold bg-gold text-gold-foreground"
                     : "text-muted-foreground hover:bg-muted",
                 )}
               >
@@ -107,7 +107,7 @@ export function ChallengeDialog({
           )}
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button
-            className="w-full rounded-xl bg-orange-500 text-white hover:bg-orange-600"
+            className="w-full rounded-xl bg-gold text-gold-foreground hover:bg-gold/90"
             disabled={busy || !effectiveReason}
             onClick={submit}
           >

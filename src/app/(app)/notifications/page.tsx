@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useStatusContext } from "@/components/status-provider";
+import { VineSprig } from "@/components/decor";
 import type { NotificationDto } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -52,8 +53,10 @@ export default function NotificationsPage() {
 
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 pt-6">
-      <header className="px-1">
-        <h1 className="text-xl font-semibold tracking-tight">Notifications</h1>
+      <header className="animate-fade-up px-1">
+        <h1 className="font-display text-3xl font-semibold tracking-tight">
+          Notifications
+        </h1>
       </header>
 
       {!items ? (
@@ -63,11 +66,12 @@ export default function NotificationsPage() {
           <Skeleton className="h-16 w-full rounded-3xl" />
         </div>
       ) : items.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-3xl border border-dashed p-10 text-center">
-          <span className="text-3xl">🔔</span>
+        <div className="animate-fade-up flex flex-col items-center gap-3 rounded-3xl border border-dashed border-gold/40 bg-card/50 p-10 text-center">
+          <VineSprig className="h-8 w-16 opacity-80" />
+          <p className="font-display text-xl">All quiet in the courtyard</p>
           <p className="text-sm text-muted-foreground">
-            Nothing yet. You&apos;ll hear about check-ins, reservations, and
-            challenges here.
+            You&apos;ll hear about check-ins, reservations, and challenges
+            here.
           </p>
         </div>
       ) : (
@@ -76,8 +80,8 @@ export default function NotificationsPage() {
             const inner = (
               <Card
                 className={cn(
-                  "flex-row items-center gap-3 rounded-3xl p-4",
-                  !n.readAt && "border-primary/30 bg-primary/5",
+                  "animate-fade-up flex-row items-center gap-3 rounded-3xl p-4",
+                  !n.readAt && "border-gold/40 bg-gold/5",
                 )}
               >
                 <span className="text-xl">{TYPE_ICONS[n.type] ?? "🔔"}</span>

@@ -1,10 +1,57 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#10b981"/>
-  <g fill="none" stroke="#ffffff" stroke-width="28" stroke-linecap="round">
-    <path d="M128 236 h256"/>
-    <path d="M148 236 v-72 a36 36 0 0 1 72 0"/>
-    <path d="M156 236 c0 66 34 108 100 108 s100 -42 100 -108"/>
-    <path d="M216 344 l-16 40"/>
-    <path d="M296 344 l16 40"/>
+  <defs>
+    <linearGradient id="stone" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#cbb98e"/>
+      <stop offset="0.5" stop-color="#e6d9b8"/>
+      <stop offset="1" stop-color="#c2ad82"/>
+    </linearGradient>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f7f1e1"/>
+      <stop offset="1" stop-color="#ece1c6"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="url(#sky)"/>
+
+  <!-- greek key border hint (top) -->
+  <g stroke="#b89d5e" stroke-width="8" fill="none" opacity="0.55">
+    <path d="M96 64 h40 v24 h-24 v-12 M176 64 h40 v24 h-24 v-12 M256 64 h40 v24 h-24 v-12 M336 64 h40 v24 h-24 v-12"/>
+  </g>
+
+  <!-- column base -->
+  <rect x="164" y="416" width="184" height="26" rx="8" fill="url(#stone)"/>
+  <rect x="180" y="392" width="152" height="26" rx="8" fill="#dccda5"/>
+
+  <!-- column shaft -->
+  <rect x="196" y="150" width="120" height="246" fill="url(#stone)"/>
+  <g stroke="#b6a179" stroke-width="7" opacity="0.7">
+    <path d="M222 154 v238"/>
+    <path d="M256 154 v238"/>
+    <path d="M290 154 v238"/>
+  </g>
+
+  <!-- capital -->
+  <rect x="172" y="120" width="168" height="20" rx="6" fill="#dccda5"/>
+  <rect x="184" y="138" width="144" height="16" rx="6" fill="url(#stone)"/>
+  <circle cx="188" cy="132" r="12" fill="#c9b688"/>
+  <circle cx="324" cy="132" r="12" fill="#c9b688"/>
+
+  <!-- ivy vine spiraling the shaft -->
+  <path d="M200 392 C 320 360 200 320 312 292 C 200 262 320 224 224 196 C 260 180 300 170 308 158"
+        fill="none" stroke="#4c7a3d" stroke-width="13" stroke-linecap="round"/>
+
+  <!-- ivy leaves -->
+  <g fill="#5d924a">
+    <path d="M212 376 q-24 -6 -26 -28 q26 2 30 24 z"/>
+    <path d="M290 330 q24 -8 40 8 q-20 16 -40 4 z"/>
+    <path d="M240 300 q-26 0 -34 -22 q26 -4 38 14 z"/>
+    <path d="M296 252 q22 -12 40 2 q-16 18 -40 10 z"/>
+    <path d="M240 212 q-24 -2 -30 -24 q26 0 34 18 z"/>
+    <path d="M296 170 q18 -12 36 -4 q-12 18 -36 14 z"/>
+  </g>
+  <g fill="#7db464">
+    <path d="M258 352 q18 -10 34 0 q-14 16 -34 8 z"/>
+    <path d="M262 272 q-20 -8 -22 -28 q24 4 28 22 z"/>
+    <path d="M270 190 q-16 -10 -16 -28 q20 6 22 24 z"/>
   </g>
 </svg>

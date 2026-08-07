@@ -9,7 +9,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-serif-display);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -39,6 +39,12 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-moss: var(--moss);
+  --color-moss-foreground: var(--moss-foreground);
+  --color-terracotta: var(--terracotta);
+  --color-terracotta-foreground: var(--terracotta-foreground);
+  --color-gold: var(--gold);
+  --color-gold-foreground: var(--gold-foreground);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -48,73 +54,87 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* Sunlit Mediterranean courtyard — warm ivory, sandstone, moss, gold */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --background: oklch(0.962 0.018 92);
+  --foreground: oklch(0.31 0.035 75);
+  --card: oklch(0.982 0.014 95);
+  --card-foreground: oklch(0.31 0.035 75);
+  --popover: oklch(0.982 0.014 95);
+  --popover-foreground: oklch(0.31 0.035 75);
+  --primary: oklch(0.46 0.075 135);
+  --primary-foreground: oklch(0.97 0.015 92);
+  --secondary: oklch(0.9 0.032 90);
+  --secondary-foreground: oklch(0.36 0.04 80);
+  --muted: oklch(0.925 0.024 92);
+  --muted-foreground: oklch(0.52 0.035 82);
+  --accent: oklch(0.89 0.035 115);
+  --accent-foreground: oklch(0.35 0.05 120);
+  --destructive: oklch(0.55 0.14 33);
+  --border: oklch(0.87 0.03 88);
+  --input: oklch(0.87 0.03 88);
+  --ring: oklch(0.72 0.09 90);
+  --chart-1: oklch(0.46 0.075 135);
+  --chart-2: oklch(0.72 0.09 90);
+  --chart-3: oklch(0.55 0.14 33);
+  --chart-4: oklch(0.6 0.06 120);
+  --chart-5: oklch(0.4 0.04 75);
+  --radius: 0.875rem;
+  --sidebar: oklch(0.945 0.02 92);
+  --sidebar-foreground: oklch(0.31 0.035 75);
+  --sidebar-primary: oklch(0.46 0.075 135);
+  --sidebar-primary-foreground: oklch(0.97 0.015 92);
+  --sidebar-accent: oklch(0.89 0.035 115);
+  --sidebar-accent-foreground: oklch(0.35 0.05 120);
+  --sidebar-border: oklch(0.87 0.03 88);
+  --sidebar-ring: oklch(0.72 0.09 90);
+  --moss: oklch(0.46 0.075 135);
+  --moss-foreground: oklch(0.97 0.015 92);
+  --terracotta: oklch(0.55 0.14 33);
+  --terracotta-foreground: oklch(0.97 0.015 92);
+  --gold: oklch(0.68 0.095 88);
+  --gold-foreground: oklch(0.28 0.04 75);
 }
 
+/* Moonlit ruins — deep warm stone, luminous moss, aged gold */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: oklch(0.215 0.014 85);
+  --foreground: oklch(0.92 0.02 92);
+  --card: oklch(0.258 0.016 90);
+  --card-foreground: oklch(0.92 0.02 92);
+  --popover: oklch(0.258 0.016 90);
+  --popover-foreground: oklch(0.92 0.02 92);
+  --primary: oklch(0.72 0.09 135);
+  --primary-foreground: oklch(0.2 0.02 90);
+  --secondary: oklch(0.3 0.02 88);
+  --secondary-foreground: oklch(0.88 0.025 90);
+  --muted: oklch(0.29 0.018 88);
+  --muted-foreground: oklch(0.68 0.028 88);
+  --accent: oklch(0.33 0.028 120);
+  --accent-foreground: oklch(0.88 0.03 115);
+  --destructive: oklch(0.64 0.13 33);
+  --border: oklch(0.35 0.024 88);
+  --input: oklch(0.35 0.024 88);
+  --ring: oklch(0.62 0.08 90);
+  --chart-1: oklch(0.72 0.09 135);
+  --chart-2: oklch(0.75 0.09 90);
+  --chart-3: oklch(0.64 0.13 33);
+  --chart-4: oklch(0.6 0.06 120);
+  --chart-5: oklch(0.8 0.02 90);
+  --sidebar: oklch(0.258 0.016 90);
+  --sidebar-foreground: oklch(0.92 0.02 92);
+  --sidebar-primary: oklch(0.72 0.09 135);
+  --sidebar-primary-foreground: oklch(0.2 0.02 90);
+  --sidebar-accent: oklch(0.33 0.028 120);
+  --sidebar-accent-foreground: oklch(0.88 0.03 115);
+  --sidebar-border: oklch(0.35 0.024 88);
+  --sidebar-ring: oklch(0.62 0.08 90);
+  --moss: oklch(0.66 0.085 135);
+  --moss-foreground: oklch(0.18 0.02 90);
+  --terracotta: oklch(0.62 0.125 33);
+  --terracotta-foreground: oklch(0.16 0.02 40);
+  --gold: oklch(0.74 0.09 88);
+  --gold-foreground: oklch(0.22 0.03 80);
 }
 
 @layer base {
@@ -123,8 +143,86 @@
   }
   body {
     @apply bg-background text-foreground;
+    background-image: radial-gradient(
+        ellipse 80% 50% at 50% -10%,
+        --alpha(var(--color-gold) / 8%),
+        transparent
+      ),
+      linear-gradient(
+        to bottom,
+        --alpha(var(--color-secondary) / 35%),
+        transparent 240px
+      );
   }
   html {
     @apply font-sans;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-serif-display), Georgia, serif;
+  }
+
+  /* Greek-key (meander) horizontal band, drawn with the gold token */
+  .greek-key {
+    height: 10px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='10' viewBox='0 0 20 10'%3E%3Cpath d='M0 9 V1 H14 V6 H6 V4 H10' fill='none' stroke='%23a98e4e' stroke-width='1.6'/%3E%3C/svg%3E");
+    background-repeat: repeat-x;
+    background-size: 20px 10px;
+    opacity: 0.5;
+  }
+  .dark .greek-key {
+    opacity: 0.65;
+  }
+
+  .animate-fade-up {
+    animation: fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .animate-sway {
+    animation: sway 6s ease-in-out infinite;
+    transform-origin: bottom center;
+  }
+  .animate-glow {
+    animation: glow 3s ease-in-out infinite;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes sway {
+  0%,
+  100% {
+    transform: rotate(-1.2deg);
+  }
+  50% {
+    transform: rotate(1.2deg);
+  }
+}
+
+@keyframes glow {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.65;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-sway,
+  .animate-glow {
+    animation: none;
   }
 }

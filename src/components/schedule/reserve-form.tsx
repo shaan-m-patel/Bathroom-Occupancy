@@ -135,7 +135,7 @@ export function ReserveForm() {
               className={cn(
                 "size-9 rounded-full border text-sm font-medium transition-colors",
                 recurrence & (1 << i)
-                  ? "border-blue-600 bg-blue-600 text-white"
+                  ? "border-moss bg-moss text-moss-foreground"
                   : "text-muted-foreground hover:bg-muted",
               )}
             >
@@ -155,7 +155,7 @@ export function ReserveForm() {
       {suggestion && (
         <button
           type="button"
-          className="w-full rounded-2xl border border-blue-300 bg-blue-50 p-3 text-left text-sm dark:border-blue-900 dark:bg-blue-950/40"
+          className="w-full rounded-2xl border border-gold/40 bg-gold/10 p-3 text-left text-sm transition-colors hover:bg-gold/15"
           onClick={() =>
             submit({
               startAt: new Date(suggestion.startAt),
@@ -163,7 +163,7 @@ export function ReserveForm() {
             })
           }
         >
-          <span className="font-medium text-blue-700 dark:text-blue-400">
+          <span className="font-medium text-gold-foreground dark:text-gold">
             Nearest open slot:
           </span>{" "}
           {formatDay(suggestion.startAt)} {formatTime(suggestion.startAt)} –{" "}

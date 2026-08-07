@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DayStrip } from "@/components/schedule/day-strip";
 import { ReservationCard } from "@/components/schedule/reservation-card";
+import { VineSprig } from "@/components/decor";
 import { useReservations } from "@/hooks/use-reservations";
 import { useStatusContext } from "@/components/status-provider";
 import { formatDay } from "@/lib/time";
@@ -21,11 +22,13 @@ export default function SchedulePage() {
 
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 pt-6">
-      <header className="flex items-center justify-between px-1">
-        <h1 className="text-xl font-semibold tracking-tight">Schedule</h1>
+      <header className="animate-fade-up flex items-center justify-between px-1">
+        <h1 className="font-display text-3xl font-semibold tracking-tight">
+          Schedule
+        </h1>
         <Button
           size="sm"
-          className="rounded-xl"
+          className="rounded-xl bg-moss text-moss-foreground hover:bg-moss/90"
           render={<Link href="/reserve" />}
         >
           Reserve
@@ -46,10 +49,11 @@ export default function SchedulePage() {
           <Skeleton className="h-24 w-full rounded-3xl" />
         </div>
       ) : entries.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-3xl border border-dashed p-10 text-center">
-          <span className="text-3xl">📅</span>
+        <div className="animate-fade-up flex flex-col items-center gap-3 rounded-3xl border border-dashed border-gold/40 bg-card/50 p-10 text-center">
+          <VineSprig className="h-8 w-16 opacity-80" />
+          <p className="font-display text-xl">An open day</p>
           <p className="text-sm text-muted-foreground">
-            Nothing reserved — the whole day is open.
+            Nothing reserved — the whole day is yours to claim.
           </p>
           <Button
             variant="outline"

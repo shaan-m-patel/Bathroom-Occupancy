@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CheckInSheet } from "@/components/home/check-in-sheet";
 import { Countdown } from "@/components/home/countdown";
+import { VineSprig } from "@/components/decor";
 import { useStatusContext } from "@/components/status-provider";
 import { postJson } from "@/lib/client";
 import { formatTime } from "@/lib/time";
@@ -36,18 +37,22 @@ export function StatusCard() {
 
   if (!occupancy) {
     return (
-      <Card className="space-y-6 rounded-3xl border-emerald-200 bg-emerald-50 p-6 text-center dark:border-emerald-900 dark:bg-emerald-950/40">
-        <div className="space-y-1 pt-2">
-          <div className="text-5xl">🟢</div>
-          <p className="text-3xl font-bold tracking-tight text-emerald-700 dark:text-emerald-400">
+      <Card className="relative overflow-hidden rounded-3xl border-moss/25 bg-gradient-to-b from-moss/10 to-card p-6 text-center shadow-lg shadow-moss/5">
+        <VineSprig className="absolute -left-1 top-3 h-10 w-20 opacity-70" />
+        <VineSprig className="absolute -right-1 top-3 h-10 w-20 -scale-x-100 opacity-70" />
+        <div className="space-y-2 pt-3">
+          <span className="animate-glow mx-auto block size-4 rounded-full bg-moss shadow-[0_0_18px] shadow-moss/60" />
+          <p className="font-display text-4xl font-semibold tracking-tight text-moss">
             Available
           </p>
           <p className="text-sm text-muted-foreground">
-            The bathroom is free right now
+            The bath awaits — the courtyard is yours
           </p>
         </div>
-        <CheckInSheet onCheckedIn={refresh} />
-        {error && <p className="text-sm text-destructive">{error}</p>}
+        <div className="mt-5">
+          <CheckInSheet onCheckedIn={refresh} />
+        </div>
+        {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
       </Card>
     );
   }
@@ -55,10 +60,10 @@ export function StatusCard() {
   const isMine = occupancy.member.id === data.meId;
 
   return (
-    <Card className="space-y-5 rounded-3xl border-red-200 bg-red-50 p-6 dark:border-red-900 dark:bg-red-950/40">
-      <div className="space-y-1 text-center">
-        <div className="text-5xl">🔴</div>
-        <p className="text-3xl font-bold tracking-tight text-red-700 dark:text-red-400">
+    <Card className="relative overflow-hidden rounded-3xl border-terracotta/25 bg-gradient-to-b from-terracotta/10 to-card p-6 shadow-lg shadow-terracotta/5">
+      <div className="space-y-2 text-center">
+        <span className="animate-glow mx-auto block size-4 rounded-full bg-terracotta shadow-[0_0_18px] shadow-terracotta/60" />
+        <p className="font-display text-4xl font-semibold tracking-tight text-terracotta">
           Occupied
         </p>
         <p className="text-sm text-muted-foreground">
@@ -67,20 +72,20 @@ export function StatusCard() {
         </p>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 text-center">
-        <div className="rounded-2xl bg-background/70 p-3">
+      <div className="mt-5 grid grid-cols-3 gap-2 text-center">
+        <div className="rounded-2xl border border-border/60 bg-background/60 p-3">
           <p className="text-xs text-muted-foreground">Checked in</p>
           <p className="text-sm font-semibold">
             {formatTime(occupancy.session.startedAt)}
           </p>
         </div>
-        <div className="rounded-2xl bg-background/70 p-3">
+        <div className="rounded-2xl border border-border/60 bg-background/60 p-3">
           <p className="text-xs text-muted-foreground">Est. finish</p>
           <p className="text-sm font-semibold">
             {formatTime(occupancy.session.expectedEndAt)}
           </p>
         </div>
-        <div className="rounded-2xl bg-background/70 p-3">
+        <div className="rounded-2xl border border-border/60 bg-background/60 p-3">
           <p className="text-xs text-muted-foreground">Remaining</p>
           <Countdown
             until={occupancy.session.expectedEndAt}
@@ -90,10 +95,10 @@ export function StatusCard() {
       </div>
 
       {isMine && (
-        <div className="space-y-3">
+        <div className="mt-5 space-y-3">
           <Button
             size="lg"
-            className="h-14 w-full rounded-2xl bg-emerald-600 text-lg font-semibold text-white hover:bg-emerald-700"
+            className="h-14 w-full rounded-2xl bg-moss text-lg font-semibold text-moss-foreground shadow-md shadow-moss/20 transition-transform hover:bg-moss/90 active:scale-[0.99]"
             disabled={busy}
             onClick={() => act(() => postJson("/api/checkout"))}
           >
@@ -108,7 +113,7 @@ export function StatusCard() {
                 <Button
                   key={m}
                   variant="outline"
-                  className="rounded-xl bg-background/70"
+                  className="rounded-xl bg-background/60"
                   disabled={busy}
                   onClick={() => act(() => postJson("/api/extend", { minutes: m }))}
                 >
@@ -120,7 +125,7 @@ export function StatusCard() {
         </div>
       )}
 
-      {error && <p className="text-center text-sm text-destructive">{error}</p>}
+      {error && <p className="mt-3 text-center text-sm text-destructive">{error}</p>}
     </Card>
   );
 }
