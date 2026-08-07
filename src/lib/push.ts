@@ -43,6 +43,11 @@ export async function sendPushToMembers(
           await db
             .delete(pushSubscriptions)
             .where(eq(pushSubscriptions.endpoint, sub.endpoint));
+        } else {
+          console.error(
+            `Push send failed (${statusCode ?? "unknown"}) for ${sub.endpoint.slice(0, 40)}:`,
+            (err as { body?: string }).body ?? err,
+          );
         }
       }
     }),
