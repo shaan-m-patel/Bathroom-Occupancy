@@ -9,7 +9,8 @@ function ensureConfigured() {
   const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   const privateKey = process.env.VAPID_PRIVATE_KEY;
   if (!publicKey || !privateKey) return true;
-  webpush.setVapidDetails("mailto:admin@bathroom.status", publicKey, privateKey);
+  // Apple rejects invalid contact URIs (e.g. fake TLDs) with 403 BadJwtToken
+  webpush.setVapidDetails("https://bathroom-status.vercel.app", publicKey, privateKey);
   configured = true;
   return false;
 }
