@@ -5,7 +5,6 @@ import { getSession } from "@/lib/auth";
 import { HouseholdCard } from "@/components/profile/household-card";
 import { ProfileEditor } from "@/components/profile/profile-editor";
 import { PushToggle } from "@/components/profile/push-toggle";
-import { StatsSection } from "@/components/profile/stats-section";
 
 export default async function ProfilePage() {
   const session = (await getSession())!;
@@ -46,7 +45,6 @@ export default async function ProfilePage() {
         }))}
         meId={session.memberId}
       />
-      <StatsSection meId={session.memberId} />
     </main>
   );
 }

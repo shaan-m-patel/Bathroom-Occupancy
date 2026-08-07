@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, households, members } from "@/db";
 import { getSession } from "@/lib/auth";
+import { NotificationsFeed } from "@/components/home/notifications-feed";
 import { StatusCard } from "@/components/home/status-card";
 import { TodayReservations } from "@/components/home/today-reservations";
 import { GreekKeyDivider } from "@/components/decor";
@@ -42,6 +43,9 @@ export default async function HomePage() {
       </div>
       <div className="animate-fade-up [animation-delay:160ms]">
         <TodayReservations />
+      </div>
+      <div className="animate-fade-up [animation-delay:240ms]">
+        <NotificationsFeed />
       </div>
     </main>
   );

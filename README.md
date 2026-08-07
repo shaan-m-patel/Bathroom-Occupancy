@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Bathroom Status
 
-## Getting Started
+A mobile-first web app for households to see whether the bathroom is occupied, check in/out with an estimated duration, reserve future time slots, and fairly resolve conflicts through a challenge system. Styled after a sunlit Mediterranean courtyard — ivory and sandstone, moss green, aged gold, with light and dark modes.
 
-First, run the development server:
+**Live app:** https://bathroom-status.vercel.app
+
+## Features
+
+- **Live status** — green Available / red Occupied card with a live countdown, updated for everyone within ~3 seconds (polling)
+- **Check in / out / extend** — one tap, with duration presets and optional notes
+- **Automatic checkout** — sessions past their estimate are expired lazily at read time (no cron required)
+- **Reservations** — week and month calendar views with overlap prevention, nearest-slot suggestions, and weekly recurring slots
+- **Challenge system** — anyone can challenge a reservation; the owner accepts (slot transfers) or declines; additional challengers queue in order
+- **Notifications** — in-app feed on the home screen plus Web Push (check-ins, availability, challenges, 10-minute reservation reminders)
+- **Household accounts** — no passwords; create a household, share the 6-character invite code, rejoin as an existing member from any device
+- **Analytics** — dedicated page with You/House scopes: 14-day trend, busiest hours, weekday breakdown, leaderboard
+- **PWA** — installable to the home screen; required for push notifications on iOS
+
+## Stack
+
+- [Next.js](https://nextjs.org) (App Router, TypeScript) on Vercel — UI and API routes in one project
+- [Neon Postgres](https://neon.com) via the Vercel Marketplace, with [Drizzle ORM](https://orm.drizzle.team)
+- Tailwind CSS v4 + shadcn/ui (Base UI)
+- `jose` for signed session cookies, `web-push` for notifications
+
+Everything runs on the free tiers (Vercel Hobby + Neon Free). Hobby-plan constraints are designed around: session expiry is computed at read time, reservation reminders dispatch opportunistically on status polls, and the single daily cron only rolls recurring reservations forward and prunes old rows.
+
+## Local development
 
 ```bash
+npm install
+vercel link                        # link to the Vercel project
+vercel env pull .env.local --yes   # pulls DATABASE_URL + secrets
+npm run db:push                    # sync schema to the database
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Required env vars (see `.env.example`): `DATABASE_URL`, `AUTH_SECRET`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `CRON_SECRET`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Script | Purpose |
+| --- | --- |
+| `npm run dev` | Start the dev server |
+| `npm run build` | Production build |
+| `npm run lint` | ESLint |
+| `npm run db:generate` | Generate SQL migrations from the Drizzle schema |
+| `npm run db:push` | Push the schema to the database |
 
-## Learn More
+## Project layout
 
-To learn more about Next.js, take a look at the following resources:
+- `src/app/(app)/` — authenticated pages (Home, Schedule, Reserve, Analytics, Profile)
+- `src/app/welcome/` — onboarding (create / join household)
+- `src/app/api/` — route handlers (status, check-in/out/extend, reservations, challenges, notifications, push, cron)
+- `src/db/` — Drizzle schema and client
+- `src/lib/` — auth, status/expiry logic, reservations, notifications, push
+- `src/components/` — UI components, including `decor.tsx` (classical SVG ornaments) and the theme toggle
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deployment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Deployed on Vercel; `vercel.json` defines the daily cron (`/api/cron/daily`). Deploy with:
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+vercel deploy --prod
+```

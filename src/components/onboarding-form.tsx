@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfilePicker } from "@/components/profile-picker";
+import { LoginTab } from "@/components/login-tab";
 import { MEMBER_COLORS, MEMBER_EMOJIS, postJson } from "@/lib/client";
 
 type Preview = {
@@ -93,9 +94,10 @@ export function OnboardingForm() {
 
   return (
     <Tabs defaultValue="create" className="w-full">
-      <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="create">Create household</TabsTrigger>
-        <TabsTrigger value="join">Join household</TabsTrigger>
+      <TabsList className="grid w-full grid-cols-3">
+        <TabsTrigger value="create">Create</TabsTrigger>
+        <TabsTrigger value="join">Join</TabsTrigger>
+        <TabsTrigger value="login">Log in</TabsTrigger>
       </TabsList>
 
       <TabsContent value="create" className="mt-6 space-y-4">
@@ -177,6 +179,10 @@ export function OnboardingForm() {
         >
           {busy ? "Joining…" : "Join as new member"}
         </Button>
+      </TabsContent>
+
+      <TabsContent value="login" className="mt-6">
+        <LoginTab />
       </TabsContent>
 
       {error && <p className="text-sm text-destructive">{error}</p>}

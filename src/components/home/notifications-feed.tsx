@@ -5,7 +5,6 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useStatusContext } from "@/components/status-provider";
-import { VineSprig } from "@/components/decor";
 import type { NotificationDto } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +19,8 @@ const TYPE_ICONS: Record<string, string> = {
   challenge_declined: "❌",
 };
 
+const COLLAPSED_COUNT = 5;
+
 function relativeTime(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
   const minutes = Math.floor(diff / 60000);
@@ -30,8 +31,9 @@ function relativeTime(iso: string) {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
-export default function NotificationsPage() {
+export function NotificationsFeed() {
   const [items, setItems] = useState<NotificationDto[] | null>(null);
+  const [expanded, setExpanded] = useState(false);
   const { refresh } = useStatusContext();
 
   useEffect(() => {
@@ -52,35 +54,25 @@ export default function NotificationsPage() {
   }, [refresh]);
 
   return (
-    <main className="flex flex-1 flex-col gap-4 p-4 pt-6">
-      <header className="animate-fade-up px-1">
-        <h1 className="font-display text-3xl font-semibold tracking-tight">
-          Notifications
-        </h1>
-      </header>
+    <section className="space-y-2">
+      <h2 className="px-1 text-sm font-semibold">Notifications</h2>
 
       {!items ? (
-        <div className="space-y-3">
-          <Skeleton className="h-16 w-full rounded-3xl" />
-          <Skeleton className="h-16 w-full rounded-3xl" />
-          <Skeleton className="h-16 w-full rounded-3xl" />
-        </div>
+        <Skeleton className="h-16 w-full rounded-3xl" />
       ) : items.length === 0 ? (
-        <div className="animate-fade-up flex flex-col items-center gap-3 rounded-3xl border border-dashed border-gold/40 bg-card/50 p-10 text-center">
-          <VineSprig className="h-8 w-16 opacity-80" />
-          <p className="font-display text-xl">All quiet in the courtyard</p>
+        <Card className="rounded-3xl p-4">
           <p className="text-sm text-muted-foreground">
-            You&apos;ll hear about check-ins, reservations, and challenges
-            here.
+            All quiet in the courtyard. You&apos;ll hear about check-ins,
+            reservations, and challenges here.
           </p>
-        </div>
+        </Card>
       ) : (
         <div className="space-y-2">
-          {items.map((n) => {
+          {(expanded ? items : items.slice(0, COLLAPSED_COUNT)).map((n) => {
             const inner = (
               <Card
                 className={cn(
-                  "animate-fade-up flex-row items-center gap-3 rounded-3xl p-4",
+                  "flex-row items-center gap-3 rounded-3xl p-4",
                   !n.readAt && "border-gold/40 bg-gold/5",
                 )}
               >
@@ -101,8 +93,19 @@ export default function NotificationsPage() {
               <div key={n.id}>{inner}</div>
             );
           })}
+          {items.length > COLLAPSED_COUNT && (
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              className="w-full py-1 text-center text-xs font-medium text-muted-foreground hover:text-foreground"
+            >
+              {expanded
+                ? "Show fewer"
+                : `Show ${items.length - COLLAPSED_COUNT} older`}
+            </button>
+          )}
         </div>
       )}
-    </main>
+    </section>
   );
 }

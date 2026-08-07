@@ -55,6 +55,24 @@ export type NotificationDto = {
   createdAt: string;
 };
 
+export type MemberStat = {
+  memberId: string;
+  name: string;
+  emoji: string;
+  color: string;
+  sessions: number;
+  avgMinutes: number;
+  totalMinutes: number;
+};
+
+export type AnalyticsPayload = {
+  timezone: string;
+  perMember: MemberStat[];
+  byHour: { hour: number; memberId: string; sessions: number }[];
+  byWeekday: { weekday: number; memberId: string; sessions: number }[];
+  byDay: { day: string; memberId: string; sessions: number; minutes: number }[];
+};
+
 export type StatusPayload = {
   now: string;
   meId: string;

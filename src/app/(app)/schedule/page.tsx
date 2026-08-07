@@ -5,11 +5,13 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DayStrip } from "@/components/schedule/day-strip";
+import { MonthGrid } from "@/components/schedule/month-grid";
 import { ReservationCard } from "@/components/schedule/reservation-card";
 import { VineSprig } from "@/components/decor";
 import { useReservations } from "@/hooks/use-reservations";
 import { useStatusContext } from "@/components/status-provider";
 import { formatDay } from "@/lib/time";
+import { cn } from "@/lib/utils";
 
 export default function SchedulePage() {
   const [day, setDay] = useState(() => {
@@ -17,25 +19,49 @@ export default function SchedulePage() {
     d.setHours(0, 0, 0, 0);
     return d;
   });
+  const [view, setView] = useState<"week" | "month">("week");
   const { entries, error, refresh } = useReservations(day);
   const { data } = useStatusContext();
 
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 pt-6">
-      <header className="animate-fade-up flex items-center justify-between px-1">
+      <header className="animate-fade-up flex items-center justify-between gap-2 px-1">
         <h1 className="font-display text-3xl font-semibold tracking-tight">
           Schedule
         </h1>
-        <Button
-          size="sm"
-          className="rounded-xl bg-moss text-moss-foreground hover:bg-moss/90"
-          render={<Link href="/reserve" />}
-        >
-          Reserve
-        </Button>
+        <div className="flex items-center gap-2">
+          <div className="flex rounded-full border bg-card p-0.5">
+            {(["week", "month"] as const).map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => setView(option)}
+                className={cn(
+                  "rounded-full px-3 py-1.5 text-xs font-medium capitalize transition-colors",
+                  view === option
+                    ? "bg-moss text-moss-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+          <Button
+            size="sm"
+            className="rounded-xl bg-moss text-moss-foreground hover:bg-moss/90"
+            render={<Link href="/reserve" />}
+          >
+            Reserve
+          </Button>
+        </div>
       </header>
 
-      <DayStrip selected={day} onSelect={setDay} />
+      {view === "week" ? (
+        <DayStrip selected={day} onSelect={setDay} />
+      ) : (
+        <MonthGrid selected={day} onSelect={setDay} />
+      )}
 
       <h2 className="px-1 text-sm font-medium text-muted-foreground">
         {formatDay(day)}

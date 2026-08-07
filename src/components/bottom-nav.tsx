@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Calendar, Home, Plus, User } from "lucide-react";
+import { Calendar, ChartColumn, Home, Plus, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
   { href: "/", label: "Home", icon: Home },
   { href: "/schedule", label: "Schedule", icon: Calendar },
   { href: "/reserve", label: "Reserve", icon: Plus },
-  { href: "/notifications", label: "Alerts", icon: Bell },
+  { href: "/analytics", label: "Analytics", icon: ChartColumn },
   { href: "/profile", label: "Profile", icon: User },
 ] as const;
 
@@ -36,7 +36,7 @@ export function BottomNav({ unreadCount = 0 }: { unreadCount?: number }) {
               )}
               <span className="relative">
                 <Icon className="size-5" strokeWidth={active ? 2.4 : 2} />
-                {href === "/notifications" && unreadCount > 0 && (
+                {href === "/" && unreadCount > 0 && (
                   <span className="absolute -right-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-terracotta px-1 text-[10px] font-semibold text-terracotta-foreground">
                     {unreadCount > 9 ? "9+" : unreadCount}
                   </span>
