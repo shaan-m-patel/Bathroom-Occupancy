@@ -1,5 +1,6 @@
-import { and, eq, gt, gte, isNotNull, lt } from "drizzle-orm";
+import { and, asc, eq, gt, gte, isNotNull, lt, sql } from "drizzle-orm";
 import { getDb, reservations, type Reservation } from "@/db";
+import { LIMITS } from "@/lib/codes";
 
 export async function findOverlap(
   householdId: string,
@@ -70,6 +71,10 @@ export async function suggestNearestSlot(
  * Ensures occurrences of a weekly recurring reservation exist for the next
  * `daysAhead` days. Occurrences that would overlap another reservation are
  * skipped. Idempotent: existing occurrences are not duplicated.
+ *
+ * Overlaps are loaded once for the window. If that household already has more
+ * future rows than the maintenance budget, this series is left alone so a
+ * single household cannot turn the call into an unbounded read.
  */
 export async function materializeSeries(
   anchor: Reservation,
@@ -91,6 +96,23 @@ export async function materializeSeries(
     );
   const existingTimes = new Set(existing.map((r) => r.startAt.getTime()));
 
+  const conflicts = await db
+    .select({
+      startAt: reservations.startAt,
+      endAt: reservations.endAt,
+      seriesId: reservations.seriesId,
+    })
+    .from(reservations)
+    .where(
+      and(
+        eq(reservations.householdId, anchor.householdId),
+        lt(reservations.startAt, horizon),
+        gt(reservations.endAt, now),
+      ),
+    )
+    .limit(LIMITS.maintenanceRowBudget);
+  if (conflicts.length >= LIMITS.maintenanceRowBudget) return;
+
   const durationMs = anchor.endAt.getTime() - anchor.startAt.getTime();
   const values: (typeof reservations.$inferInsert)[] = [];
 
@@ -102,13 +124,13 @@ export async function materializeSeries(
     if (existingTimes.has(start.getTime())) continue;
 
     const end = new Date(start.getTime() + durationMs);
-    const overlaps = await findOverlap(
-      anchor.householdId,
-      start,
-      end,
-      anchor.seriesId,
+    const overlap = conflicts.some(
+      (row) =>
+        row.seriesId !== anchor.seriesId &&
+        row.startAt.getTime() < end.getTime() &&
+        row.endAt.getTime() > start.getTime(),
     );
-    if (overlaps.length > 0) continue;
+    if (overlap) continue;
 
     values.push({
       householdId: anchor.householdId,
@@ -125,14 +147,70 @@ export async function materializeSeries(
   }
 }
 
-/** Re-materializes all recurring series in the system (used by the daily cron). */
+/** Rotates which household is visited first so a large one cannot stay at the head of the queue. */
+export function rotateHouseholdOrder<T>(items: T[], epochMs: number) {
+  if (items.length === 0) return items;
+  const start = Math.floor(epochMs / 86_400_000) % items.length;
+  return [...items.slice(start), ...items.slice(0, start)];
+}
+
+/**
+ * Re-materializes recurring series for the daily cron.
+ * Households are visited in a rotating order. Each household contributes at
+ * most `seriesPerHouseholdPerRun` series, and the run stops after
+ * `seriesPerCronRun` so one household's volume cannot consume the whole job.
+ */
 export async function materializeAllSeries() {
   const db = getDb();
-  const anchors = await db
-    .select()
+  const householdRows = await db
+    .selectDistinct({ householdId: reservations.householdId })
     .from(reservations)
-    .where(isNotNull(reservations.recurrenceDays));
-  for (const anchor of anchors) {
-    await materializeSeries(anchor);
+    .where(isNotNull(reservations.recurrenceDays))
+    .orderBy(asc(reservations.householdId));
+
+  const ordered = rotateHouseholdOrder(
+    householdRows.map((row) => row.householdId),
+    Date.now(),
+  );
+
+  let processed = 0;
+  for (const householdId of ordered) {
+    if (processed >= LIMITS.seriesPerCronRun) break;
+
+    const [volume] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(reservations)
+      .where(
+        and(
+          eq(reservations.householdId, householdId),
+          gt(reservations.endAt, new Date()),
+        ),
+      );
+    if (Number(volume?.count ?? 0) > LIMITS.maintenanceRowBudget) continue;
+
+    const remaining = Math.min(
+      LIMITS.seriesPerHouseholdPerRun,
+      LIMITS.seriesPerCronRun - processed,
+    );
+    const anchors = await db
+      .select()
+      .from(reservations)
+      .where(
+        and(
+          eq(reservations.householdId, householdId),
+          isNotNull(reservations.recurrenceDays),
+        ),
+      )
+      .orderBy(asc(reservations.id))
+      .limit(remaining);
+
+    for (const anchor of anchors) {
+      try {
+        await materializeSeries(anchor);
+      } catch (err) {
+        console.error("Failed to materialize series", anchor.id, err);
+      }
+      processed++;
+    }
   }
 }

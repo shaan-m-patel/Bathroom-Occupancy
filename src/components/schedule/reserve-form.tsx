@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LIMITS } from "@/lib/codes";
 import { formatDay, formatTime } from "@/lib/time";
 import { cn } from "@/lib/utils";
 
@@ -120,6 +121,7 @@ export function ReserveForm() {
           id="reason"
           placeholder="Morning routine"
           value={reason}
+          maxLength={LIMITS.reason}
           onChange={(e) => setReason(e.target.value)}
         />
       </div>

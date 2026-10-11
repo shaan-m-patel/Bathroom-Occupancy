@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ProfilePicker } from "@/components/profile-picker";
+import { LIMITS } from "@/lib/codes";
 import { postJson } from "@/lib/client";
 
 type Props = {
@@ -66,6 +67,7 @@ export function ProfileEditor({ initialName, initialEmoji, initialColor }: Props
           <Input
             id="profile-name"
             value={name}
+            maxLength={LIMITS.memberName}
             onChange={(e) => setName(e.target.value)}
           />
         </div>

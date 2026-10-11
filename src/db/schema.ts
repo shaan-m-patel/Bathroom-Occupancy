@@ -1,5 +1,7 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
+  index,
   integer,
   jsonb,
   pgEnum,
@@ -21,6 +23,8 @@ export const households = pgTable("households", {
   name: text("name").notNull(),
   inviteCode: text("invite_code").notNull().unique(),
   timezone: text("timezone").notNull().default("UTC"),
+  // Bumped when the invite code rotates so previously issued sessions stop working.
+  sessionVersion: integer("session_version").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -35,6 +39,9 @@ export const members = pgTable("members", {
   emoji: text("emoji").notNull().default("🙂"),
   color: text("color").notNull().default("#3b82f6"),
   isAdmin: boolean("is_admin").notNull().default(false),
+  // SHA-256 hex of the member's login code. Null until they create one.
+  // Rejoining an existing profile requires this secret; the shared invite code cannot mint a session.
+  loginCodeHash: text("login_code_hash"),
   // Push preferences keyed by category; a missing key means enabled
   notificationPrefs: jsonb("notification_prefs")
     .$type<Record<string, boolean>>()
@@ -85,7 +92,12 @@ export const reservations = pgTable("reservations", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-});
+}, (table) => [
+  index("reservations_household_end_idx").on(table.householdId, table.endAt),
+  index("reservations_active_series_idx")
+    .on(table.householdId)
+    .where(sql`${table.recurrenceDays} IS NOT NULL`),
+]);
 
 export const challenges = pgTable("challenges", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -145,6 +157,14 @@ export const notifications = pgTable("notifications", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
+});
+
+// Fixed-window counters for auth and write endpoints. One row per key, reused
+// when the window expires, and pruned by the daily cron.
+export const rateLimitBuckets = pgTable("rate_limit_buckets", {
+  key: text("key").primaryKey(),
+  count: integer("count").notNull(),
+  resetAt: timestamp("reset_at", { withTimezone: true }).notNull(),
 });
 
 export type Household = typeof households.$inferSelect;

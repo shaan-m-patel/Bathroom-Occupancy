@@ -1,5 +1,7 @@
+import { eq } from "drizzle-orm";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import { getDb, households } from "@/db";
 
 const COOKIE_NAME = "bs_session";
 
@@ -12,8 +14,11 @@ function getSecret() {
   return new TextEncoder().encode(process.env.AUTH_SECRET!);
 }
 
-export async function createSessionCookie(session: Session) {
-  const token = await new SignJWT(session)
+export async function createSessionCookie(
+  session: Session,
+  sessionVersion: number,
+) {
+  const token = await new SignJWT({ ...session, sv: sessionVersion })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("365d")
@@ -38,6 +43,18 @@ export async function getSession(): Promise<Session | null> {
     if (typeof payload.memberId !== "string" || typeof payload.householdId !== "string") {
       return null;
     }
+    // Tokens issued before session versions existed are treated as version 0.
+    // Rotating the invite code bumps the household version and invalidates them.
+    const sv = payload.sv === undefined ? 0 : payload.sv;
+    if (typeof sv !== "number" || !Number.isInteger(sv)) return null;
+
+    const db = getDb();
+    const [household] = await db
+      .select({ sessionVersion: households.sessionVersion })
+      .from(households)
+      .where(eq(households.id, payload.householdId));
+    if (!household || household.sessionVersion !== sv) return null;
+
     return { memberId: payload.memberId, householdId: payload.householdId };
   } catch {
     return null;
@@ -47,14 +64,4 @@ export async function getSession(): Promise<Session | null> {
 export async function clearSessionCookie() {
   const store = await cookies();
   store.delete(COOKIE_NAME);
-}
-
-export function generateInviteCode() {
-  // Unambiguous uppercase alphabet (no 0/O, 1/I/L)
-  const alphabet = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
-  let code = "";
-  for (let i = 0; i < 6; i++) {
-    code += alphabet[Math.floor(Math.random() * alphabet.length)];
-  }
-  return code;
 }

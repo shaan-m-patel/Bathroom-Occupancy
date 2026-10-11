@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getDb, households, members } from "@/db";
 import { getSession } from "@/lib/auth";
 import { HouseholdCard } from "@/components/profile/household-card";
+import { LoginCodeCard } from "@/components/profile/login-code-card";
 import { NotificationSettings } from "@/components/profile/notification-settings";
 import { ProfileEditor } from "@/components/profile/profile-editor";
 import { PushToggle } from "@/components/profile/push-toggle";
@@ -36,6 +37,7 @@ export default async function ProfilePage() {
         initialEmoji={me.member.emoji}
         initialColor={me.member.color}
       />
+      <LoginCodeCard hasLoginCode={Boolean(me.member.loginCodeHash)} />
       <PushToggle />
       <NotificationSettings
         initialPrefs={me.member.notificationPrefs}
@@ -46,10 +48,19 @@ export default async function ProfilePage() {
         name={me.household.name}
         inviteCode={me.household.inviteCode}
         members={householdMembers.map((m) => ({
-          ...m,
+          id: m.id,
+          householdId: m.householdId,
+          name: m.name,
+          emoji: m.emoji,
+          color: m.color,
+          isAdmin: m.isAdmin,
           createdAt: m.createdAt.toISOString(),
         }))}
         meId={session.memberId}
+        isAdmin={me.member.isAdmin}
+        membersWithoutLoginCode={
+          householdMembers.filter((m) => !m.loginCodeHash).length
+        }
       />
     </main>
   );

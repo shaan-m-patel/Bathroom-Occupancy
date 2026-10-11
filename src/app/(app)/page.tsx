@@ -1,7 +1,9 @@
 import { eq } from "drizzle-orm";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getDb, households, members } from "@/db";
 import { getSession } from "@/lib/auth";
+import { LIMITS } from "@/lib/codes";
 import { NotificationsFeed } from "@/components/home/notifications-feed";
 import { StatusCard } from "@/components/home/status-card";
 import { TodayReservations } from "@/components/home/today-reservations";
@@ -37,6 +39,32 @@ export default async function HomePage() {
         </div>
         <GreekKeyDivider />
       </header>
+
+      {(!me.member.loginCodeHash ||
+        (me.member.isAdmin &&
+          me.household.inviteCode.length < LIMITS.inviteLength)) && (
+        <div className="space-y-2 rounded-2xl border border-gold/40 bg-gold/10 px-4 py-3 text-sm">
+          {!me.member.loginCodeHash && (
+            <p>
+              <Link href="/profile" className="font-medium underline">
+                Create a login code
+              </Link>{" "}
+              so you can sign in on another device.
+            </p>
+          )}
+          {me.member.isAdmin &&
+            me.household.inviteCode.length < LIMITS.inviteLength && (
+              <p>
+                This invite code is short enough to guess.{" "}
+                <Link href="/profile" className="font-medium underline">
+                  Rotate it
+                </Link>{" "}
+                after each member has a login code. Rotating signs every device
+                out.
+              </p>
+            )}
+        </div>
+      )}
 
       <div className="animate-fade-up [animation-delay:80ms]">
         <StatusCard />

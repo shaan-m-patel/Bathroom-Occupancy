@@ -12,7 +12,7 @@ A mobile-first web app for households to see whether the bathroom is occupied, c
 - **Reservations** — week and month calendar views with overlap prevention, nearest-slot suggestions, and weekly recurring slots
 - **Challenge system** — anyone can challenge a reservation; the owner accepts (slot transfers) or declines; additional challengers queue in order
 - **Notifications** — in-app feed on the home screen plus Web Push (check-ins, availability, challenges, 10-minute reservation reminders)
-- **Household accounts** — no passwords; create a household, share the 6-character invite code, rejoin as an existing member from any device
+- **Household accounts** — create a household and share a 26-character invite code to add a new profile. Signing back into an existing profile requires that member's login code. Admins can rotate the invite code, which signs every device out.
 - **Analytics** — dedicated page with You/House scopes: 14-day trend, busiest hours, weekday breakdown, leaderboard
 - **PWA** — installable to the home screen; required for push notifications on iOS
 

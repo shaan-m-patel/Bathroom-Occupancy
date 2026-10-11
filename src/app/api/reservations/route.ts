@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { and, asc, eq, gte, inArray, lt } from "drizzle-orm";
+import { and, asc, eq, gt, gte, inArray, isNotNull, lt, sql } from "drizzle-orm";
 import { challenges, getDb, members, reservations } from "@/db";
 import { requireSession } from "@/lib/api-auth";
+import { isReservationDuration, LIMITS, parseReason } from "@/lib/codes";
+import { readJsonBody, tooManyResponse } from "@/lib/http";
+import { toPublicMember } from "@/lib/public-member";
+import { consumeRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import {
   findOverlap,
   materializeSeries,
@@ -43,7 +47,8 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     reservations: rows.map((r) => ({
-      ...r,
+      reservation: r.reservation,
+      member: toPublicMember(r.member),
       challenges: challengeRows.filter(
         (c) => c.reservationId === r.reservation.id,
       ),
@@ -55,9 +60,19 @@ export async function POST(req: NextRequest) {
   const { session, error } = await requireSession();
   if (error) return error;
 
-  const body = await req.json().catch(() => null);
-  const startAt = new Date(body?.startAt ?? "");
-  const endAt = new Date(body?.endAt ?? "");
+  const limited = await consumeRateLimit(
+    `reserve:hh:${session.householdId}`,
+    RATE_LIMITS.reservationHousehold.limit,
+    RATE_LIMITS.reservationHousehold.windowMs,
+  );
+  if (!limited.allowed) return tooManyResponse(limited.retryAfterSec);
+
+  const parsed = await readJsonBody(req);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.body;
+
+  const startAt = new Date(typeof body?.startAt === "string" ? body.startAt : "");
+  const endAt = new Date(typeof body?.endAt === "string" ? body.endAt : "");
   if (isNaN(startAt.getTime()) || isNaN(endAt.getTime())) {
     return NextResponse.json({ error: "Invalid start or end time" }, { status: 400 });
   }
@@ -68,7 +83,7 @@ export async function POST(req: NextRequest) {
     );
   }
   const durationMs = endAt.getTime() - startAt.getTime();
-  if (durationMs <= 0 || durationMs > 4 * 60 * 60 * 1000) {
+  if (!isReservationDuration(durationMs)) {
     return NextResponse.json(
       { error: "Reservations must be between 5 minutes and 4 hours" },
       { status: 400 },
@@ -76,14 +91,54 @@ export async function POST(req: NextRequest) {
   }
   const recurrenceDays =
     Number.isInteger(body?.recurrenceDays) &&
-    body.recurrenceDays > 0 &&
-    body.recurrenceDays < 128
-      ? (body.recurrenceDays as number)
+    (body?.recurrenceDays as number) > 0 &&
+    (body?.recurrenceDays as number) < 128
+      ? (body?.recurrenceDays as number)
       : null;
-  const reason =
-    typeof body?.reason === "string" ? body.reason.trim() || null : null;
+  const reason = parseReason(body?.reason);
+  if (!reason.ok) {
+    return NextResponse.json({ error: reason.error }, { status: 400 });
+  }
 
   const db = getDb();
+  const now = new Date();
+  const [future, series] = await Promise.all([
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(reservations)
+      .where(
+        and(
+          eq(reservations.householdId, session.householdId),
+          gt(reservations.endAt, now),
+        ),
+      ),
+    recurrenceDays
+      ? db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(reservations)
+          .where(
+            and(
+              eq(reservations.householdId, session.householdId),
+              isNotNull(reservations.recurrenceDays),
+            ),
+          )
+      : Promise.resolve([{ count: 0 }]),
+  ]);
+  const futureCount = Number(future[0]?.count ?? 0);
+  const projected = recurrenceDays ? LIMITS.seriesOccurrenceBudget : 1;
+  if (futureCount + projected > LIMITS.maxFutureReservations) {
+    return NextResponse.json(
+      { error: "This household already has too many upcoming reservations" },
+      { status: 400 },
+    );
+  }
+  if (recurrenceDays && Number(series[0]?.count ?? 0) >= LIMITS.maxActiveSeries) {
+    return NextResponse.json(
+      { error: "This household already has too many repeating reservations" },
+      { status: 400 },
+    );
+  }
+
   const overlaps = await findOverlap(session.householdId, startAt, endAt);
   if (overlaps.length > 0) {
     const suggestion = await suggestNearestSlot(
@@ -112,7 +167,7 @@ export async function POST(req: NextRequest) {
       memberId: session.memberId,
       startAt,
       endAt,
-      reason,
+      reason: reason.reason,
       recurrenceDays,
     })
     .returning();

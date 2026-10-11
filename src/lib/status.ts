@@ -8,6 +8,7 @@ import {
   waitlistEntries,
 } from "@/db";
 import { notifyBathroomAvailable, notifyMembers } from "@/lib/notify";
+import { toPublicMember } from "@/lib/public-member";
 
 /**
  * Lazy expiry: any active session whose estimate has passed is closed at its
@@ -138,12 +139,18 @@ export async function getStatusPayload(
       .orderBy(asc(reservations.startAt));
   }
 
+  const current = currentRows[0];
   return {
     now: new Date().toISOString(),
     meId: memberId,
-    occupancy: currentRows[0] ?? null,
-    members: householdMembers,
-    reservations: windowReservations,
+    occupancy: current
+      ? { session: current.session, member: toPublicMember(current.member) }
+      : null,
+    members: householdMembers.map(toPublicMember),
+    reservations: windowReservations.map((row) => ({
+      reservation: row.reservation,
+      member: toPublicMember(row.member),
+    })),
     unreadCount: unreadRows[0]?.count ?? 0,
     waitingCount: waiting.length,
     amWaiting: waiting.some((w) => w.memberId === memberId),
