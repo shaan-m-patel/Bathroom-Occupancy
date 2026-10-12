@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { getDb, members } from "@/db";
 import { requireSession } from "@/lib/api-auth";
+import { LIMITS } from "@/lib/codes";
+import { readJsonBody } from "@/lib/http";
+import { toPublicMember } from "@/lib/public-member";
 import { isCategoryKey } from "@/lib/notification-prefs";
 
 function isMinuteOfDay(v: unknown): v is number {
@@ -12,7 +15,9 @@ export async function PATCH(req: NextRequest) {
   const { session, error } = await requireSession();
   if (error) return error;
 
-  const body = await req.json().catch(() => null);
+  const parsed = await readJsonBody(req);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.body;
   const updates: Partial<{
     name: string;
     emoji: string;
@@ -22,9 +27,17 @@ export async function PATCH(req: NextRequest) {
     quietHoursEnd: number | null;
   }> = {};
   if (typeof body?.name === "string" && body.name.trim()) {
+    if (body.name.trim().length > LIMITS.memberName) {
+      return NextResponse.json({ error: "Name is too long" }, { status: 400 });
+    }
     updates.name = body.name.trim();
   }
-  if (typeof body?.emoji === "string" && body.emoji) updates.emoji = body.emoji;
+  if (typeof body?.emoji === "string" && body.emoji) {
+    if (body.emoji.length > LIMITS.emoji) {
+      return NextResponse.json({ error: "Emoji is too long" }, { status: 400 });
+    }
+    updates.emoji = body.emoji;
+  }
   if (typeof body?.color === "string" && /^#[0-9a-f]{6}$/i.test(body.color)) {
     updates.color = body.color;
   }
@@ -36,7 +49,7 @@ export async function PATCH(req: NextRequest) {
     updates.notificationPrefs = prefs;
   }
   // Quiet hours come as a pair: both minutes-of-day, or both null to disable
-  if ("quietHoursStart" in (body ?? {}) || "quietHoursEnd" in (body ?? {})) {
+  if (body && ("quietHoursStart" in body || "quietHoursEnd" in body)) {
     const { quietHoursStart: start, quietHoursEnd: end } = body;
     if (isMinuteOfDay(start) && isMinuteOfDay(end)) {
       updates.quietHoursStart = start;
@@ -61,6 +74,9 @@ export async function PATCH(req: NextRequest) {
     .set(updates)
     .where(eq(members.id, session.memberId))
     .returning();
+  if (!updated) {
+    return NextResponse.json({ error: "Member not found" }, { status: 404 });
+  }
 
-  return NextResponse.json({ member: updated });
+  return NextResponse.json({ member: toPublicMember(updated) });
 }

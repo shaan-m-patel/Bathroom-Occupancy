@@ -5,41 +5,25 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { isInviteCode, isLoginCode, LIMITS, normalizeCode } from "@/lib/codes";
 import { postJson } from "@/lib/client";
-
-type PreviewMember = { id: string; name: string };
 
 export function LoginTab() {
   const router = useRouter();
   const [inviteCode, setInviteCode] = useState("");
   const [name, setName] = useState("");
+  const [loginCode, setLoginCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const inviteReady = isInviteCode(inviteCode);
+  const loginReady = isLoginCode(loginCode);
 
   async function submitLogin() {
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch(`/api/household/preview?code=${inviteCode}`);
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(data?.error || "Invalid invite code");
-      }
-      const wanted = name.trim().toLowerCase();
-      const member = (data.members as PreviewMember[]).find(
-        (m) => m.name.trim().toLowerCase() === wanted,
-      );
-      if (!member) {
-        setError(
-          `No one named "${name.trim()}" in this household — try the Join tab`,
-        );
-        setBusy(false);
-        return;
-      }
-      await postJson("/api/household/join", {
-        inviteCode,
-        claimMemberId: member.id,
-      });
+      await postJson("/api/household/login", { inviteCode, name, loginCode });
       router.push("/");
       router.refresh();
     } catch (err) {
@@ -55,9 +39,12 @@ export function LoginTab() {
         <Input
           id="loginInviteCode"
           value={inviteCode}
-          onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-          placeholder="ABC123"
-          maxLength={6}
+          onChange={(e) =>
+            setInviteCode(normalizeCode(e.target.value).slice(0, LIMITS.inviteLength))
+          }
+          placeholder="Paste invite code"
+          autoComplete="off"
+          spellCheck={false}
           className="font-mono tracking-widest uppercase"
         />
       </div>
@@ -68,16 +55,32 @@ export function LoginTab() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Alex"
+          maxLength={LIMITS.memberName}
           autoComplete="given-name"
         />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="loginCode">Login code</Label>
+        <Input
+          id="loginCode"
+          value={loginCode}
+          onChange={(e) =>
+            setLoginCode(normalizeCode(e.target.value).slice(0, LIMITS.loginLength))
+          }
+          placeholder="From your profile"
+          autoComplete="off"
+          spellCheck={false}
+          className="font-mono tracking-widest uppercase"
+        />
         <p className="text-xs text-muted-foreground">
-          Use the name of your existing profile in the household.
+          Use the login code saved on your profile. The invite code alone
+          cannot open an existing profile.
         </p>
       </div>
       <Button
         className="w-full"
         size="lg"
-        disabled={busy || inviteCode.length !== 6 || !name.trim()}
+        disabled={busy || !inviteReady || !loginReady || !name.trim()}
         onClick={submitLogin}
       >
         {busy ? "Logging in…" : "Log in"}

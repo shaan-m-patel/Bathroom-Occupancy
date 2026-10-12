@@ -8,11 +8,16 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfilePicker } from "@/components/profile-picker";
 import { LoginTab } from "@/components/login-tab";
+import {
+  formatCode,
+  isInviteCode,
+  LIMITS,
+  normalizeCode,
+} from "@/lib/codes";
 import { MEMBER_COLORS, MEMBER_EMOJIS, postJson } from "@/lib/client";
 
 type Preview = {
   household: { name: string };
-  members: { id: string; name: string; emoji: string; color: string }[];
 };
 
 export function OnboardingForm() {
@@ -22,12 +27,21 @@ export function OnboardingForm() {
   const [color, setColor] = useState(MEMBER_COLORS[0]);
   const [householdName, setHouseholdName] = useState("");
   const [inviteCode, setInviteCode] = useState("");
+  const [legacyPreview, setLegacyPreview] = useState(false);
   const [preview, setPreview] = useState<Preview | null>(null);
+  const [issuedLoginCode, setIssuedLoginCode] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const inviteReady = isInviteCode(inviteCode);
+
   useEffect(() => {
-    if (inviteCode.length !== 6) return;
+    const lookupLegacy =
+      inviteCode.length === LIMITS.legacyInviteLength && legacyPreview;
+    const lookupNew = inviteCode.length === LIMITS.inviteLength;
+    if (!lookupLegacy && !lookupNew) return;
+
     let cancelled = false;
     fetch(`/api/household/preview?code=${inviteCode}`)
       .then((res) => (res.ok ? res.json() : null))
@@ -38,13 +52,18 @@ export function OnboardingForm() {
     return () => {
       cancelled = true;
     };
-  }, [inviteCode]);
+  }, [inviteCode, legacyPreview]);
 
   async function submit(payload: Record<string, unknown>, url: string) {
     setBusy(true);
     setError(null);
     try {
-      await postJson(url, payload);
+      const data = await postJson<{ loginCode?: string }>(url, payload);
+      if (data.loginCode) {
+        setIssuedLoginCode(data.loginCode);
+        setBusy(false);
+        return;
+      }
       router.push("/");
       router.refresh();
     } catch (err) {
@@ -68,8 +87,43 @@ export function OnboardingForm() {
   const submitJoin = () =>
     submit({ inviteCode, name, emoji, color }, "/api/household/join");
 
-  const submitClaim = (claimMemberId: string) =>
-    submit({ inviteCode, claimMemberId }, "/api/household/join");
+  async function copyLoginCode() {
+    if (!issuedLoginCode) return;
+    await navigator.clipboard.writeText(issuedLoginCode);
+    setCopied(true);
+  }
+
+  if (issuedLoginCode) {
+    return (
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <h2 className="font-display text-2xl font-semibold tracking-tight">
+            Save your login code
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            You&apos;ll need this code, plus the household invite code and your
+            name, to sign in on another device. It is shown only once.
+          </p>
+        </div>
+        <p className="break-all rounded-2xl bg-muted/50 p-4 text-center font-mono text-sm tracking-widest">
+          {formatCode(issuedLoginCode)}
+        </p>
+        <Button variant="outline" className="w-full" onClick={copyLoginCode}>
+          {copied ? "Copied ✓" : "Copy login code"}
+        </Button>
+        <Button
+          className="w-full"
+          size="lg"
+          onClick={() => {
+            router.push("/");
+            router.refresh();
+          }}
+        >
+          I&apos;ve saved it
+        </Button>
+      </div>
+    );
+  }
 
   const profileFields = (
     <div className="space-y-4">
@@ -80,6 +134,7 @@ export function OnboardingForm() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Alex"
+          maxLength={LIMITS.memberName}
           autoComplete="given-name"
         />
       </div>
@@ -108,6 +163,7 @@ export function OnboardingForm() {
             value={householdName}
             onChange={(e) => setHouseholdName(e.target.value)}
             placeholder="Smith Family"
+            maxLength={LIMITS.householdName}
           />
         </div>
         {profileFields}
@@ -128,45 +184,33 @@ export function OnboardingForm() {
             id="inviteCode"
             value={inviteCode}
             onChange={(e) => {
-              setInviteCode(e.target.value.toUpperCase());
+              setInviteCode(
+                normalizeCode(e.target.value).slice(0, LIMITS.inviteLength),
+              );
               setPreview(null);
+              setLegacyPreview(false);
             }}
-            placeholder="ABC123"
-            maxLength={6}
+            onBlur={() => {
+              if (inviteCode.length === LIMITS.legacyInviteLength) {
+                setLegacyPreview(true);
+              }
+            }}
+            placeholder="Paste invite code"
+            autoComplete="off"
+            spellCheck={false}
             className="font-mono tracking-widest uppercase"
           />
         </div>
 
         {preview && (
-          <div className="space-y-2 rounded-2xl bg-muted/50 p-3">
+          <div className="space-y-1 rounded-2xl bg-muted/50 p-3">
             <p className="text-sm font-medium">
               Joining {preview.household.name}
             </p>
-            {preview.members.length > 0 && (
-              <>
-                <p className="text-xs text-muted-foreground">
-                  Already a member? Tap your profile to sign back in.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {preview.members.map((m) => (
-                    <button
-                      key={m.id}
-                      type="button"
-                      disabled={busy}
-                      onClick={() => submitClaim(m.id)}
-                      className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors hover:bg-muted"
-                      style={{ borderColor: `${m.color}66` }}
-                    >
-                      <span>{m.emoji}</span>
-                      <span className="font-medium">{m.name}</span>
-                    </button>
-                  ))}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Or create a new profile below.
-                </p>
-              </>
-            )}
+            <p className="text-xs text-muted-foreground">
+              This creates a new profile. To open an existing one, use the Log
+              in tab with your login code.
+            </p>
           </div>
         )}
 
@@ -174,7 +218,7 @@ export function OnboardingForm() {
         <Button
           className="w-full"
           size="lg"
-          disabled={busy || inviteCode.length !== 6 || !name.trim()}
+          disabled={busy || !inviteReady || !name.trim()}
           onClick={submitJoin}
         >
           {busy ? "Joining…" : "Join as new member"}
